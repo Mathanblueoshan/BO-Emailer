@@ -1,7 +1,6 @@
-const axios = require('axios');
-require("dotenv").config();
+const hupspotRequest = require("./helper/hubspotReq");
 
-const HUBSPOT_API_KEY = process.env.HUBSPOT_API_KEY;
+
 
 // Get Emails params
 const campaignName = "BP1 survey";
@@ -10,12 +9,12 @@ const endTimestamp = 1598949900000;
  
 
  //Fetch all published marketing emails
+
 async function getPublishedMarketingEmails() {
+  const url = 'https://api.hubapi.com/marketing-emails/v1/emails';
   try {
-      const response = await axios.get('https://api.hubapi.com/marketing-emails/v1/emails', {
-          headers: { Authorization: `Bearer ${HUBSPOT_API_KEY}` }
-      });
-      return response.data.objects.filter(email => email.isPublished === true);
+      const response =  await hupspotRequest(url);
+      return response.objects.filter(email => email.isPublished === true);
   } catch (error) {
       console.error("Error fetching emails:", error.response?.data || error.message);
       return [];
@@ -30,9 +29,7 @@ async function getEmailsByCampaignNameAndDate(campaignName, startTimestamp, endT
       email.campaignName === campaignName &&  email.publishDate >= startTimestamp && email.publishDate <=  endTimestamp
   );
   const emailList=[];
-  filteredEmails.forEach(email => {
-    emailList.push(email.name);
-  });
+  filteredEmails.forEach(email => { emailList.push(email.id); });
   // Log the result as JSON
   const result = { campaignName, emails:emailList };
   console.log(JSON.stringify(result, null, 2));
