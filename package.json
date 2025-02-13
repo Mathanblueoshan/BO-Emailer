@@ -1,7 +1,19 @@
 {
+  "name": "bo-emailer",
+  "version": "1.0.0",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node app.js"
+  },
   "dependencies": {
     "axios": "^1.7.9",
+    "bo-emailer": "file:",
     "dotenv": "^16.4.7",
     "express": "^4.21.2"
-  }
+  },
+  "keywords": [],
+  "author": "SriKumaran and Mathan",
+  "license": "ISC",
+  "description": "Email automation Tool"
 }
