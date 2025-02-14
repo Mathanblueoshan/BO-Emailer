@@ -1,19 +1,16 @@
 const hubspotRequest = require("./helper/hubspotReq");
 
-
-
 // Get Emails params
 const campaignName = "BP1 survey";
-const startTimestamp = 1546300800000; 
-const endTimestamp = 1598949900000; 
- 
+const startTimestamp = 1546300800000;
+const endTimestamp = 1598949900000;
 
- //Fetch all published marketing emails
+//Fetch all published marketing emails
 
 async function getPublishedMarketingEmails() {
-      const url = 'https://api.hubapi.com/marketing-emails/v1/emails';
-      const response =  await hubspotRequest(url);
-      return response.objects.filter(email => email.isPublished === true);
+  const url = 'https://api.hubapi.com/marketing-emails/v1/emails';
+  const response = await hubspotRequest(url);
+  return response.objects.filter(email => email.isPublished === true);
 }
 
 // get specific emails 
@@ -21,27 +18,20 @@ async function getEmailsByCampaignNameAndDate(campaignName, startTimestamp, endT
   const emails = await getPublishedMarketingEmails();
   // Filter emails by campaign name and date range
   const filteredEmails = emails.filter(email =>
-      email.campaignName === campaignName &&  email.publishDate >= startTimestamp && email.publishDate <=  endTimestamp
+    email.campaignName === campaignName && email.publishDate >= startTimestamp && email.publishDate <= endTimestamp
   );
-  const emailList=[];
+  const emailList = [];
   filteredEmails.forEach(email => { emailList.push(email.id); });
-  // Log the result as JSON
-  const result = { campaignName, emails:emailList };
+  const result = { campaignName, emails: emailList };
   return result;
-  // console.log(JSON.stringify(result, null, 2));
 }
 
-// getEmailsByCampaignNameAndDate(campaignName, startTimestamp, endTimestamp);
-
-
-//-----------------------------------------------------------------------------------------------------------------------------------------------
 // second - metrics
 
 // Step 1: Get `mailingIncludeLists` for the marketing email
 async function getMailingIncludeLists(emailId) {
   const url = `https://api.hubapi.com/marketing-emails/v1/emails/${emailId}`;
   const emailData = await hubspotRequest(url);
-  // console.log(emailData)
   return emailData?.mailingListsIncluded || [];
 }
 
@@ -61,10 +51,10 @@ async function getEmailEvents(emailId, recipientEmail) {
   if (!eventsData?.events) return metrics;
 
   eventsData.events.forEach(event => {
-      if (event.type === "SENT") metrics.sent++;
-      else if (event.type === "DELIVERED") metrics.delivered++;
-      else if (event.type === "OPEN") metrics.open++;
-      else if (event.type === "CLICK") metrics.click++;
+    if (event.type === "SENT") metrics.sent++;
+    else if (event.type === "DELIVERED") metrics.delivered++;
+    else if (event.type === "OPEN") metrics.open++;
+    else if (event.type === "CLICK") metrics.click++;
   });
   return metrics;
 }
@@ -73,51 +63,40 @@ async function getEmailEvents(emailId, recipientEmail) {
 async function calculateListLevelMetrics(emailId) {
   const lists = await getMailingIncludeLists(emailId);
   if (lists.length === 0) {
-      console.log("No lists found for this marketing email.");
-      return;
+    console.log("No lists found for this marketing email.");
+    return;
   }
 
   const results = [];
-
   for (const listId of lists) {
-      const contacts = await getContactsInList(listId);
-      let aggregatedMetrics = { sent: 0, delivered: 0, open: 0, click: 0 };
+    const contacts = await getContactsInList(listId);
+    let aggregatedMetrics = { sent: 0, delivered: 0, open: 0, click: 0 };
 
-      for (const contact of contacts) {
-          const contactEmail = contact["identity-profiles"]?.[0]?.["identities"]?.[0]?.["value"];
-          if (!contactEmail) continue;
+    for (const contact of contacts) {
+      const contactEmail = contact["identity-profiles"]?.[0]?.["identities"]?.[0]?.["value"];
+      if (!contactEmail) continue;
 
-          const contactMetrics = await getEmailEvents(emailId, contactEmail);
-          console.log(contactMetrics)
-          aggregatedMetrics.sent += contactMetrics.sent;
-          aggregatedMetrics.delivered += contactMetrics.delivered;
-          aggregatedMetrics.open += contactMetrics.open;
-          aggregatedMetrics.click += contactMetrics.click;
-      }
+      const contactMetrics = await getEmailEvents(emailId, contactEmail);
+      console.log(contactMetrics)
+      aggregatedMetrics.sent += contactMetrics.sent;
+      aggregatedMetrics.delivered += contactMetrics.delivered;
+      aggregatedMetrics.open += contactMetrics.open;
+      aggregatedMetrics.click += contactMetrics.click;
+    }
 
-      results.push({
-          emailId,
-          listId,
-          metrics: aggregatedMetrics
-      });
+    results.push({
+      emailId,
+      listId,
+      metrics: aggregatedMetrics
+    });
   }
 
   console.log(JSON.stringify(results, null, 2));
 }
-
-// Execute the function
-// calculateListLevelMetrics(marketingEmailId);
-
-
-
- async function main() {
-   const data =  await getEmailsByCampaignNameAndDate(campaignName, startTimestamp, endTimestamp);
-    // console.log(data.emails)
-   data.emails.forEach((email) => {
-    // console.log(email)
-      calculateListLevelMetrics(email)
-   });
-  
+async function main() {
+  const data = await getEmailsByCampaignNameAndDate(campaignName, startTimestamp, endTimestamp);
+  data.emails.forEach((email) => {
+    calculateListLevelMetrics(email)
+  });
 }
-
 main();
