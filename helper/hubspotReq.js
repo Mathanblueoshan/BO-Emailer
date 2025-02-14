@@ -14,7 +14,7 @@ const HUBSPOT_API_KEY = process.env.HUBSPOT_API_KEY;
       });
       return response.data;
   } catch (error) {
-      console.error(`Hubspot Error fetching ${url}:`, error.response?.data || error.message);
+      console.error(`Hubspot Error fetching ${url}:`,error.message);
       return null;
   }
 }
