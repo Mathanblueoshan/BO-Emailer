@@ -46,7 +46,6 @@ async function getContactsInList(listId) {
 async function getEmailEvents(emailId, recipientEmail) {
   const url = `https://api.hubapi.com/email/public/v1/events`;
   const eventsData = await hubspotRequest(url, { emailId, recipient: recipientEmail });
-
   const metrics = { sent: 0, delivered: 0, open: 0, click: 0 };
   if (!eventsData?.events) return metrics;
 
